@@ -1,7 +1,15 @@
--- load json decoder
-if not shared.rxi_json then
-	require("https://raw.githubusercontent.com/LegitACarWithAGun/deadlinecomp-mods/refs/heads/main/dependencies/rxi-json.lua")
-end
+local rxi_json = require("../dependencies/rxi-json")
+
+export type setup_node = {
+    attached: {setup_node},
+    attributes: unknown,
+    lerp: string | "0.000",
+    name: string?,
+
+    -- added during parse
+    --- nil for the root node
+    parent: setup_node?
+}
 
 --- breadth first
 function iter_descendants(node: setup_node, include_self: boolean): () -> setup_node?
@@ -22,7 +30,7 @@ function iter_descendants(node: setup_node, include_self: boolean): () -> setup_
 
 		-- add nodes from the next depth
 		local node = cur_nodes[i]
-		for _, child in pairs(node.attached) do
+		for _, child in node.attached do
 			table.insert(next_nodes, child)
 		end
 
@@ -39,7 +47,7 @@ function update_parents(node: setup_node)
 end
 
 function parse_setup(setup_json: setup_json): setup_node
-	local root_node = shared.rxi_json.decode(setup_json) :: setup_node
+	local root_node = rxi_json.decode(setup_json) :: setup_node
 
 	if not root_node.attached then
 		root_node = root_node[1]
@@ -65,8 +73,17 @@ end
 --- prints all the attachments of the equipped weapon
 function print_equipped_attachments(want_player: string?, slot_name: string?)
 	want_player = want_player or function_caller
-	local player = players.get(want_player :: string) --- TODO: this errors without overriding the type
+	local player = players.get(want_player :: string)
+	if not player then
+		error(`{want_player} is not in the server`)
+		return
+	end
+
 	slot_name = slot_name or player.get_active_slot()
+	if not slot_name then
+		error("no slot specified + player isnt using a slot")
+		return
+	end
 
 	local weapon = player.get_weapon_data_from_character(slot_name)
 	if weapon.type == "throwable" then
@@ -89,7 +106,7 @@ function print_equipped_attachments(want_player: string?, slot_name: string?)
 	print_node(root_node, 1)
 end
 
-shared.dlcomp_setup_reader = {
+return {
 	parse_setup = parse_setup,
 	find_first = find_first,
 	print_equipped_attachments = print_equipped_attachments

@@ -4,10 +4,8 @@
 -- prints a quick reference of frequently used comp commands to the server console
 -- usage: run ;cmds in chat, or call print_command_reference() directly
 
--- load command bot
-if not shared.dlcomp_command_bot then
-    require("https://raw.githubusercontent.com/legitacarwithagun/deadlinecomp-mods/refs/heads/main/command-bot.luau")
-end
+local maid = require("../shared/maid").new("dlcomp-command-reference")
+local command_bot = require("./command-bot")
 
 -- keep every printed line comfortably under console/chat wrap limits
 local MAX_LINE_LENGTH = 100
@@ -75,11 +73,13 @@ function print_command_reference()
     end
 end
 
-shared.dlcomp_command_bot.add_command("cmds", "prints a quick reference of frequently used comp commands to the server console", function()
+maid["cmd-cmds"] = command_bot.add_command("cmds", "prints a quick reference of frequently used comp commands to the server console", function()
     print_command_reference()
     return "printed command reference to server console"
 end)
 
-shared.dlcomp_command_reference = {
+return {
     print_command_reference = print_command_reference,
+
+    maid = maid,
 }

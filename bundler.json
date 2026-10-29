@@ -1,0 +1,12 @@
+{
+	"defaults": {
+		"outputPrefix": "output"
+	},
+	"bundles": [
+		{
+			"name": "dlcomp_server",
+			"entry": "./src/server/rulesets/default.luau",
+			"output": "server.luau"
+		}
+	]
+}

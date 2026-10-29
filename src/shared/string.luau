@@ -1,5 +1,3 @@
---!strict
-
 -- just removes whitespace from the start of a string
 function trim_start(str: string): string
     local output, _ = string.gsub(str, "^%s+", "", 1)
@@ -17,7 +15,7 @@ end
 -- takes a list of strings and a string to match against
 -- returns all the strings in the list After the first match
 -- returns a empty list if it matches the last section, nil if no matches
-function sections_after_match(sections: {string}, needle: string): {string}?
+local function sections_after_match(sections: {string}, needle: string): {string}?
     for i, section in sections do
 		-- section matches the needle, store everything after this
         if string.match(section, needle) then
@@ -58,15 +56,20 @@ function partial_match_sections(haystack: {string}, needle: string, seperator: s
     return output
 end
 
--- does nothing if the prefix doesnt exist in the text
--- returns (found, remaining)
+function has_prefix(text: string, prefix: string): boolean
+    return text:sub(1, prefix:len()) ~= prefix
+end
+--- does nothing if the prefix doesnt exist in the text
+--- returns (found, remaining)
 function cut_prefix(text: string, prefix: string): (boolean, string)
-    -- check for prefix
-    if text:sub(1, prefix:len()) ~= prefix then
+    if has_prefix(text, prefix) then
         return false, text
     end
-    -- remove the prefix
     return true, text:sub(prefix:len()+1)
+end
+function trim_prefix(text: string, prefix: string): string
+    local _, remaining = cut_prefix(text, prefix)
+    return remaining
 end
 
 function print_array_tall<T>(header: string?, array: {T}): ()
@@ -88,11 +91,13 @@ function print_array_tall<T>(header: string?, array: {T}): ()
     print() -- leave a empty line after contents
 end
 
-shared.dlcomp_string = {
+return {
     trim_start = trim_start,
     trim_end = trim_end,
     trim = trim,
 	partial_match_sections = partial_match_sections,
+    has_prefix = has_prefix,
     cut_prefix = cut_prefix,
+    trim_prefix = trim_prefix,
     print_array_tall = print_array_tall,
 }

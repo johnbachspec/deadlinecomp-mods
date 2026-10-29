@@ -1,5 +1,7 @@
---!strict
+--- strings input by the client, should support infinite depth
+export type flattable_strings = string | {string}
 
+--- whether the given key of the table is in its internal array (accessible by ipairs)
 local function is_array_section(tbl: {}, key: any): boolean
     if type(key) ~= "number" then
         return false
@@ -84,7 +86,7 @@ end
 --- - shifts arrays down like table.remove
 --- - removes dictionary values aswell
 function remove_value<T>(tbl: {T}, value: T)
-    local array_indices_to_remove = {}
+    local array_indices_to_remove: {number} = {}
 
     for k, v in tbl do
         if v ~= value then
@@ -92,7 +94,7 @@ function remove_value<T>(tbl: {T}, value: T)
         end
 
         if is_array_section(tbl, k) then
-            -- currently in a an array, deal with the key later
+            -- key is in the array section of the table, deal with it later
             table.insert(array_indices_to_remove, k)
         else
             -- dictionary key, just remove
@@ -101,7 +103,7 @@ function remove_value<T>(tbl: {T}, value: T)
     end
 
     -- remove matching values from the array part of the table
-    -- have to do it backwards to not move the remaining indexes
+    -- have to do it backwards to not move the rest of the indices we want to remove
     table.sort(array_indices_to_remove)
     for i=#array_indices_to_remove, 1, -1 do
         table.remove(tbl, array_indices_to_remove[i])
@@ -113,6 +115,14 @@ function append_unique<T>(tbl: {T}, value: T)
         return
     end
     table.insert(tbl, value)
+end
+
+function get_keys<k>(tbl: {[k]: any}): {k}
+    local keys = {}
+    for key in tbl do
+        table.insert(keys, key)
+    end
+    return keys
 end
 
 -- equivalent to .map in JS
@@ -161,7 +171,7 @@ function get_usernames_of_players(players: {player}): {string}
     return usernames
 end
 
-shared.dlcomp_table = {
+return {
 	get_page = get_page,
     filter = filter,
 	in_filter = in_filter,
@@ -171,6 +181,7 @@ shared.dlcomp_table = {
     partial_match = partial_match,
     remove_value = remove_value,
     append_unique = append_unique,
+    get_keys = get_keys,
     transform_values = transform_values,
     flat_strings = flat_strings,
     is_empty = is_empty,
